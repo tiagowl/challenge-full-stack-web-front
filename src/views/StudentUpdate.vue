@@ -2,29 +2,29 @@
     <v-form class="pr-15" >
         <div class="d-flex pt-10 mb-3" >
             <label class="pt-4 pl-4 bg-blue-grey-lighten-5" >Registro acadêmico</label>
-            <v-text-field v-model="studentBody.ra" ></v-text-field>
+            <v-text-field v-model="studentState.ra" disabled ></v-text-field>
         </div>
         <div class="d-flex mb-3" >
             <label class="pt-4 pl-4 bg-blue-grey-lighten-5" >Email</label>
-            <v-text-field v-model="studentBody.email" ></v-text-field>
+            <v-text-field v-model="studentState.email" ></v-text-field>
         </div>
         <div class="d-flex mb-3" >
             <label class="pt-4 pl-4 bg-blue-grey-lighten-5" >Nome</label>
-            <v-text-field v-model="studentBody.name" ></v-text-field>
+            <v-text-field v-model="studentState.name" ></v-text-field>
         </div>
         <div class="d-flex mb-8" >
             <label class="pt-4 pl-4 bg-blue-grey-lighten-5" >CPF</label>
-            <v-text-field v-model="studentBody.cpf" ></v-text-field>
+            <v-text-field v-model="studentState.cpf" disabled ></v-text-field>
         </div>
         <div class="d-flex justify-end" >
             <v-btn @click="navigateBack" class="bg-blue-grey-lighten-4 text-white" >Cancelar</v-btn>
-            <v-btn @click="saveStudent" :loading="isLoading" class="ml-4 bg-blue-grey-lighten-1 text-white" >Salvar</v-btn>
+            <v-btn @click="updateStudent" class="ml-4 bg-blue-grey-lighten-1 text-white" >Salvar</v-btn>
         </div>
     </v-form>
     <v-snackbar
       v-model="fetchSucess"
     >
-      Usuário cadastrado com sucesso.
+      Usuário editado com sucesso.
 
       <template v-slot:actions>
         <v-btn
@@ -57,12 +57,14 @@
 <script setup>
 
 import {useRouter} from 'vue-router';
-import { useAsyncState } from '@vueuse/core'
-import api from '@/services/api';
+import { useAsyncState } from '@vueuse/core';
+import { useRouteParams } from '@vueuse/router';
 import {ref} from 'vue';
+import api from '@/services/api';
 
 const router = useRouter();
-const studentBody = ref({ra: "", name: "", email: "", cpf: ""});
+const studentId = useRouteParams('id');
+const studentState = ref({name: "",email: ""});
 const fetchSucess = ref(false);
 const fetchError = ref({error: false, message: ""});
 
@@ -70,10 +72,10 @@ const navigateBack = () => {
     return router.back();
 }
 
-const saveStudent = () => {
+const updateStudent = () => {
     const {state, isLoading, isReady, error} = useAsyncState(
-        api.post("/students", studentBody.value)
-        .then(t => t.data)
+        api.put(`/students/${studentId.value}`, studentState.value)
+        .then(t => { fetchSucess.value = true; return t.data})
         .catch( error => fetchError.value = {error: true, message: error.response.data.message[0]}),
         {id: null},
     );
